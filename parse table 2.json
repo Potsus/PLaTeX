@@ -1,0 +1,205 @@
+//this table describes h0w the parser will see different parts of the math
+//i will describe how they should relate to each other
+var mathConstructs = [
+    ["number"],
+    //a number consists only of numeric characters
+    //it must be seperated from a variable, function, or paren by a binary operator
+    //if it is not seperated by a binary operator then a multiplication symbol will be inserted
+    //numbers can have superscripts but not subscripts
+    ["binOp"],
+    //a binary operator is a symbol like + or - completely unlike any other.
+    //it has a unique function
+    //more on this later
+    ["variable"],
+    //a string of alphabetic characters not defined as a function
+    //same rules as a number but variables can have subscripts
+    //a subscript on a variable should parse as variable_subscript
+    //variables can be functions, sets, dictionaries, or set values
+    //this makes them tricky and lookups should be performed on the parse array for previous definitions
+    //depending on the definition different actions are needed
+    //consider using different definitions for set, dict, and func
+    ["function"],
+    //always romanized in LATEX
+    //always followed by paren
+    //might be combined with the paren in the parse table?
+    //
+    //defining a function
+    //defined as f(g) = g+1 or something simmilar
+    //when an undefined variable is followed by parentheses it is assumed to be a function definition
+    //the parentheses should only contain variables seperated by commas
+    //(should the variables inside the paren also be undefined?)
+    //
+    //if it is in function form, but undefined you should expect an equals sign to follow it
+    //the definition after the equals sign should include all variables included in the declaration
+    //inside the paren should only be variables seperated by commas
+    //only if f is undefined is this allowed
+    ["paren"],
+    //any symbol that requires another closing symbol
+    //these pass to matchParen which finds the closing symbol and parses the insides seperately
+    //does not require a bin op if preceded by a function name
+    ["subscript"],
+    // an underscore: _ followed by a single character, or curly braces
+    //used to define a different variable
+    //selects an element of a set
+    //selects an element of a sequence
+    //can be used to get the value of functions at the subscript(rarely)
+    //should only be used on variables and things with upper and lower bounds
+    //upper and lower bounds are taken by the get bounds function
+    //when following a function should always be handled by a specific parse function
+    //may be allowed to follow certian functions in the future (do some research)
+    ["superscript"],
+    // a caret: ^ followed by a single char or curly braces
+    //can be tacked after numbers, variables, paren, and some functions
+    // almost universally puts the preceding to the power of its contents 
+    //sometimes used for upper limits
+    //may require more research
+    
+    //these are possible math constructs, most of which a variable can be defined as
+    ["list tuples and sequences"],
+    //http://www.sagemath.org/doc/tutorial/programming.html#lists-tuples-and-sequences
+    ["set"],
+    //http://www.sagemath.org/doc/tutorial/programming.html#sets
+    //defined as f = [1,2,3]
+    //brackets on the right mean it's a set
+    //set elements are seperated by commas
+    //sets may be defined other ways
+    //do more research on how sets are used
+    ["dict"],
+    //http://www.sagemath.org/doc/tutorial/programming.html#dictionaries
+    //a dictionary, sometimes called an associative array
+    //defined as f = {something:something, something:something...}
+    //probably not used in math, but i'm unsure
+    //do more research
+    ["matrix"],
+    //not doing it yet
+    //mathquill can't handle it yet
+    //LATEX looks like () or [] around numbers with blank space between them
+    //numbers can be both horizontal and vertical
+    //vertical elipses:   \vdots
+    //horizontal elipses: \cdots
+    //diagonal elipses:   \ddots
+    //can be used to symbolize intervening numbers
+    ["vector"],
+    //uses \langle and \rangle as delimiters
+    //do some research
+    ["upper bound"],
+    
+    ["lower bound"],
+]
+
+
+////characters we need to parse
+//i'm going to parse all parentheses in matchParen so parentheses go in the parentheses table.
+//if they are an individual character they still need an entry here in order to be recognized
+//
+//these should have the same structure as the functions we parse 
+//using these index values for the different data
+//0 - the symbol seen by the parser in the latex
+//1 - the symbol or pattern we want sage to use
+//2 - the parse switch command we want to use, defined in the descision block
+//3 - this flag is for the abstract value in the completed parse array, see mathConstructs
+//4 - here and after are decision specific flags and data.
+var charTable = [
+    ["{","{",0],
+    ["}","}",0],
+    //these curly braces are left intact because sage uses them for dictionaries
+    //parse them with matchParen(current index to end of substring,index of curly braces)
+    ["[","[",0],
+    ["]","]",0],
+    //these square braces are left intact because sage uses them for sets
+    //parse them with matchParen
+    ["(","(",0],
+    [")",")",0],
+    //regular parens shouldn't come up in mathquill but they might in regular latex
+    //we still parse with matchParen
+    ["|","|",0],
+    //pipes should be treated like a paren denoting absolute value
+    //it will rarely be on it's own like this but this entry is just in case
+    //
+    //mathquill uses \left| and \right|
+    //should call matchParen
+    ["^","^",1],
+    //a superscript
+    //followed by either one character or curly braces
+    //should pass through with paren () around exponent
+    //shouldn't be many other possibilities
+    //
+    //in sage interpreter ^ gets replaced with **
+    //
+    //superscript derivative:
+    //the LATEX notation
+    //f^{n}(x) is the nth derivative of the function f with regards to x
+    ["_","_",2],
+    //subscript 
+    //should only follow variables
+    //used to denote a different variable
+    //can be either numbers or letters but not both(probably)
+    //passed to sage as variable_subscript
+    //this lets it show up properly in sage's latex output
+    //
+    //used for many other types of notation
+    //
+    //can represent an element of a set
+    //
+    //a bunch more
+    //
+    //can represent a falling factorial
+    //http://en.wikipedia.org/wiki/Falling_factorial
+    //probably don't have to worry about this one'
+
+]
+
+//these are the types of parens that matchParen looks for
+//you have to select them by their index but i might have matchParen do a lookup match instead
+//rework matchParen to take the paren type into account. 
+//it can get called from just \\left
+//it needs to be able to read both the single char form and the \\left \\right versions
+//actually that might not be an issue, look into it
+var parenTypes = [
+    ["\\left(","\\right)","(",")"],
+    ["\\left{","\\right}","{","}"],
+    ["\\left[","\\right]","[","]"],
+    ["(",")","(",")"],
+    ["{","}","{","}"],
+    ["[","]","[","]"],
+    ["\\left|","\\right|","abs(",")"],
+    //absolute value parens
+    //this one's easy enough since i can add the abs to the left side
+    ["\\left\\langle","\\right\\rangle]","vector([","])"],
+    //these are used to delimit vectors
+    //maybe we can use < and > for them on they keyboard
+    //sage uses f = vector([set of elements]) to define a vector
+    //the parse for this could be more complicated,
+    //
+    //i might want to include things in matchParen that define what the parens represent
+
+];
+            
+//the paren table with patterns
+//this is probably superfluous
+//why was i doing this?
+//            
+//these are the types of parens that matchParen looks for
+//you have to select them by their index but i might have matchParen do a lookup match instead
+//rework matchParen to take the paren type into account. 
+//it can get called from just \\left
+//it needs to be able to read both the single char form and the \\left \\right versions
+//actually that might not be an issue, look into it
+var parenTypes = [
+    ["\\left(","\\right)","(\\0)","paren"],
+    ["\\left{","\\right}","{\\0}","dict"],
+    ["\\left[","\\right]","[\\0]","set"],
+    ["(",")","(\\0)","paren"],
+    ["{","}","{\\0}","dict"],
+    ["[","]","[\\0]","set"],
+    ["\\left|","\\right|","abs(\\0)","paren"],
+    //absolute value parens
+    //this one's easy enough since i can add the abs to the left side
+    ["\\langle","\\rangle]","vector([\\0])","vector"],
+    //these are used to delimit vectors
+    //maybe we can use < and > for them on they keyboard
+    //sage uses f = vector([set of elements]) to define a vector
+    //the parse for this could be more complicated,
+    //i might want to include things in matchParen that define what the parens represent
+
+];

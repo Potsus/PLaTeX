@@ -1,0 +1,109 @@
+/* 
+    Document   : mqdoc
+    Created on : May 2, 2013, 3:43:30 PM
+    Author     : Alex
+    Description:
+        css for the mathquill test
+*/
+.editBox{
+    
+}
+
+.myBox{
+    display: inline-block;
+    margin: 5px;
+    padding: 5px;
+    border: 5px solid #006400;
+    border-radius: 5px;
+}
+
+.boxLatex, .boxWarn, .boxCode, .boxErrors, .boxSemantic, .boxVars{
+    border: 3px solid orange;
+    border-radius: 3px;
+    padding:2px;
+    margin:2px;
+}
+
+.boxLatex{
+    border-color: blue;
+}
+
+.boxCode{
+    border-color: blueviolet;
+}
+.boxErrors{
+    border-color: red;
+}
+.boxWarn{
+    border-color: yellow;
+}
+.boxSemantic{
+    border-color: orange;
+    
+}
+.boxVars{
+    border-color: black;
+}
+.boxVars div{
+    display: inline;
+}
+
+
+.boxVars div, .boxSemantic div{
+    background-color: green;
+    border: none;
+    color: white;
+    border-radius: 3px;
+    padding:2px;
+    padding-left: 4px;
+    padding-right: 4px;
+    margin: 2px;
+}
+
+.boxSemantic div{
+    display: block;
+    
+}
+.boxSemantic div div{
+    display: inline;
+}
+
+.boxSemantic .func{
+    background-color: blue;
+}
+.boxSemantic .binOp{
+    background-color: lightseagreen;
+}
+.boxSemantic .var{
+    background-color: green;
+}
+.boxSemantic .paren{
+    background-color: #dd00dd;
+}
+.boxSemantic .curl{
+    background-color: #aa00aa;
+}
+.boxSemantic .brac{
+    background-color: #770077;
+}
+.boxSemantic .sageS{
+    background-color: #0000aa;
+}
+.boxSemantic .num{
+    background-color: black;
+}
+.boxSemantic .sym{
+    background-color: orange;
+}
+.boxSemantic .equiv{
+    background-color: gray;
+}
+.boxSemantic .err{
+    background-color: red;
+}
+.boxSemantic .sup{
+    background-color: brown;
+}
+.boxSemantic .sub{
+    background-color: brown;
+}

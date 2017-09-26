@@ -1,0 +1,61 @@
+functions
+
+[
+    ["arccos","arccos",1],
+    ["cos","cos",1],
+    ["csc","csc",1],
+    ["sinh","sinh",1],
+    ["arcsin","arcsin",1],
+    ["cosh","cosh",1],
+    ["gcd","gcd",1],
+    ["text","1",2],
+    ["ker","ker",1],
+    ["lg","lg",1],
+    ["ln","ln",1],
+    ["arctan","arctan",1],
+    ["cot","cot",1],
+    ["det","det",1],
+    ["lim","lim",1],
+    ["log","log",1],
+    ["sec","sec",1],
+    ["tan","tan",1],
+    ["coth","coth",1],
+    ["sin","sin",1],
+    ["tanh","tanh",1],
+    ["arg","arg",1],
+    ["frac","((1)/(2))",2],
+    ["sqrt","sqrt(1)",2]
+]
+
+symbols
+
+[
+    ["left(","(",0],
+    ["right)",")",0],
+    ["cdot","*",0],
+    ["ast","*",0],
+    ["star","*",0],
+    ["times","*",0],
+    ["div","/",0],
+    ["infty","/",0],
+]
+
+problem cases:
+    
+[
+    ["limsup","limsup"],
+    ["liminf","liminf"],
+    ["^\circ","degree"],
+    ["min","min"],
+    ["max","max"],
+]
+
+completely unsupported
+
+[
+    
+    ["\sup","supremum"],
+    ["\inf","infinum"],
+    ["\Pr","probability"],
+    ["\hom","homomorphisim"],
+]

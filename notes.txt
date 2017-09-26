@@ -1,0 +1,31 @@
+http://en.wikipedia.org/wiki/List_of_mathematical_symbols        
+
+it's going to make it a lot easier to understand
+
+use objects for data but arrays for fast lookups
+
+fuck no i was right
+arrays are dozen's to hundreds of times faster than objects
+objects are more extensible however...
+objects might be better for the kind of analasys that i'm working on, albiet vastly slower
+
+objects would be much better for what i'm talking about
+rather than defining complicated loops i could define a general object with a parse method and attributes
+after i've assigned semantic values to the latex i could iterate through and call their parse methods
+this would generally involve searching the semantic representation and stealing values and marking things as used
+
+methods:
+get contents
+parse
+mark used
+
+objects are too slow so i'll be using switch statements with code for 
+
+i can still use arrays for indexes and keep it fast that way
+arrays should also be used for the key since it's much faster there
+
+splicing into the middle of an array is slow as shit
+http://stackoverflow.com/questions/8423493/what-is-the-performance-of-objects-arrays-in-javascript-specifically-for-googl
+
+a little note, 
+apparently while loops are much faster in reverse
