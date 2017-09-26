@@ -1,315 +1,3 @@
-//http://en.wikipedia.org/wiki/List_of_mathematical_symbols        
-
-//it's going to make it a lot easier to understand
-//
-//use objects for data but arrays for fast lookups
-//
-//fuck no i was right
-//arrays are dozen's to hundreds of times faster than objects
-//objects are more extensible however...
-//objects might be better for the kind of analasys that i'm working on, albiet vastly slower
-//
-//objects would be much better for what i'm talking about
-//rather than defining complicated loops i could define a general object with a parse method and attributes
-//after i've assigned semantic values to the latex i could iterate through and call their parse methods
-//this would generally involve searching the semantic representation and stealing values and marking things as used
-//
-//methods:
-//get contents
-//parse
-//mark used
-//
-//objects are too slow so i'll be using switch statements with code for 
-//
-//i can still use arrays for indexes and keep it fast that way
-//arrays should also be used for the key since it's much faster there
-//
-//splicing into the middle of an array is slow as shit
-//http://stackoverflow.com/questions/8423493/what-is-the-performance-of-objects-arrays-in-javascript-specifically-for-googl
-//
-//a little note, 
-//apparently while loops are much faster in reverse
-//
-
-
-
-//refrence sheet:
-//the construction of a semantic object is as follows
-//0 - the object's value
-//1 - the object's semantic class, governs how this function deals with it
-//2 - any notes about that particular 
-function parseSemantic(semRep){
-    console.log("Parse Semantic");
-
-    //loop is only for display purposes
-    for(var j=0,len=semRep.length,cout="semRep: ";j<len;j++)cout += semRep[j][0]+" ";
-    console.log(cout);
-
-    //set these three vars before each new step
-    var parseLeft = 0;
-    var parseRight = 1;
-    var j=0; //the iterator
-
-    //the first level parse
-    //combines elements and creates functions where special chars are used
-    console.log("The combining loop: combinations of elements and functions");
-    console.log("list length: "+semRep.length);
-    while(j<semRep.length){
-
-        if(semRep[j-1]!=undefined)parseLeft = 1;
-        else parseLeft = 0;
-        if(semRep[j+1]==undefined)parseRight = 0;
-
-
-        console.log("   CL at element "+j+" parse left:"+parseLeft+" parse right:"+parseRight);
-        console.log("current element: "+semRep[j]);
-
-
-        switch(semRep[j][1]){
-            case "num"://numbers
-                console.log("       found a number");
-                //left
-                if(parseLeft!=0){
-                    console.log("        checking to the left");
-                    console.log("        nothing to do left");
-                }
-                if(parseRight!=0){
-                    console.log("        checking to the right");
-                    if(semRep[j+1][1]=="sup"){
-                        //combine number and power
-                        console.log("               combining the number:"+semRep[j][0]+" with power:"+semRep[j+1][0]);
-                        semRep[j] = [(semRep[j][0] + semRep[j+1][0]),"num","number and power"];
-                        semRep.splice(j+1,1);
-                        break;
-                    }
-                    else console.log("        found nothing right");
-                }
-                j++;
-                break;
-
-            case "var"://variables
-                console.log("       found a variable");
-                //left
-                if(parseLeft!=0){
-                    console.log("        checking to the left");
-                    console.log("        nothing to do left");
-                }
-                if(parseRight!=0){
-                    console.log("        checking to the right");
-                    if(semRep[j+1][1]=="sup"){
-                        //the subscript gets combined first
-                        if(semRep[j+2] != undefined){
-                            if(semRep[j+2][1]=="sub"){
-                                console.log("               combining the variable:"+semRep[j][0]+" with subscript:"+semRep[j+1][0]);
-                                semRep[j] = [(semRep[j][0] + semRep[j+1][0]),"var","variable and subscript"];
-                                semRep.splice(j+2,1);
-                                break;
-                            }
-                        }
-                        //combine var and power
-                        console.log("               combining the variable:"+semRep[j][0]+" with power:"+semRep[j+1][0]);
-                        semRep[j] = [(semRep[j][0] + semRep[j+1][0]),"var","variable and power"];
-                        semRep.splice(j+1,1);
-                        break;
-                    }
-                    else if(semRep[j+1][1]=="sub"){
-                        //combine var and subscript
-                        console.log("               combining the variable:"+semRep[j][0]+" with power:"+semRep[j+1][0]);
-                        semRep[j] = [(semRep[j][0] + semRep[j+1][0]),"var","variable and power"];
-                        semRep.splice(j+1,1);
-                        break;
-                    }
-                    else if(semRep[j+1][1]=="paren"){
-                        //combine var and paren to make function
-
-                        //lookup for variable function status goes here
-
-                        console.log("               combining the variable:"+semRep[j][0]+" with paren:"+semRep[j+1][0]);
-                        semRep[j] = [(semRep[j][0] + semRep[j+1][0]),"var","function"];
-                        semRep.splice(j+1,1);
-                        break;
-                    }
-                    else console.log("        found nothing right");
-                }
-                j++;
-                break;
-
-            case "binOp"://binary operators
-                console.log("       found a binary operator");
-                //left
-                if(semRep[j][0]=="-"){
-                    console.log("        binOp is minus. skipping check left");
-                }
-                else{
-                    if(parseLeft!=0){
-                        console.log("        checking to the left");
-                        if(!needsBin(semRep[j-1][1]))console.error("     invalid left hand argument for binOp:"+semRep[j][0]);
-                    }
-                    else{
-                        console.error("       binOp with nothing on the left");
-                        errors.push("'" + semRep[j][0] + "' needs a left argument.");
-                    }
-                }
-                if(semRep[j][0]=="-" || semRep[j][0]=="+"){
-                    console.log("skip check right for + and -");
-                }
-                else{
-                    if(parseRight!=0){
-                        console.log("        checking to the right");
-                        if(!needsBin(semRep[j+1][1])){
-                            if(semRep[j+1][0]!="-"){
-                                console.error("       binOp with invalid arguments on the right");
-                                errors.push("'" + semRep[j][0] + "' has an invalid right arguments.");
-                            }
-                        }
-                    }
-                    else{
-                        errors.push("'" + semRep[j][0] + "' needs a right argument.");
-                        console.error("'" + semRep[j][0] + "' needs a right argument.");
-                    }
-                }
-                j++;
-                break;
-
-            case "comb"://combine
-                var comb = semComb(semRep,j,recurse);
-                semRep = comb[0];
-                j = comb[1];
-                break;
-
-            case "prime":
-                if(parseRight!=0){
-                    console.log("        checking for additional primes");
-                    var recurse = 1;
-                    while(semRep[j+1] != undefined && semRep[j+1][1] == "prime"){
-                        recurse++;
-                        semRep.splice(j+1,1);
-                    }
-                    var comb = semComb(semRep,j,recurse);
-                    semRep = comb[0];
-                    j = comb[1];
-                    break;
-                }
-                else{
-                    console.error("prime must be followed by the variable you are differentiating with respect to in parentheses");
-                    errors.push("The prime must be followed by the variable you are differentiating with respect to in parentheses.");
-                    j++;
-                    break;
-                }
-
-            case "":
-                semRep.splice(j,1);
-                break;
-
-            default: 
-                j++;
-                break;
-        }
-    }
-
-    //the last level
-    //inserts times signs
-    parseLeft = 0;
-    parseRight = 1;
-    j=0;
-    console.log("The last loop: inserting multipliers");
-    console.log("list length: "+semRep.length);
-    while(j<semRep.length){
-        console.log("current element: "+semRep[j]);
-        if(semRep[j-1]!=undefined)parseLeft = 1;
-        else parseLeft = 0;
-
-        console.log('checking ro the right: '+semRep[j+1]);
-        if(semRep[j+1]==undefined)parseRight = 0;
-        console.log("   LL at element "+j+" parse left:"+parseLeft+" parse right:"+parseRight);
-        //Number stuff
-        if(needsBin(semRep[j][1])){
-            console.log("    found a "+semRep[j][1]);
-            //left
-            if(parseLeft!=0){
-                console.log("        checking to the left");
-                if(needsBin(semRep[j-1][1])){
-                    console.log("            inserting a * between "+semRep[j-1][0]+" and "+semRep[j][0]);
-                    semRep.splice(j,0,["*","binOp","inserted multiplier"]);
-                    continue;
-                }
-            }
-            if(parseRight!=0){
-                console.log("        checking to the right");
-                if(needsBin(semRep[j+1][1])){
-                    console.log("           inserting a * between "+semRep[j][0]+" and "+semRep[j+1][0]);
-                    semRep.splice(j+1,0,["*","binOp","inserted multiplier"]);
-                    continue;
-                }
-                else if(semRep[j+1][1]=="binOp"){
-                    j++;
-                    continue;
-                }
-            }
-            j++;
-        }
-        if(parseLeft==0 && parseRight==0){
-            console.log("can't parse left or right");
-            break;
-        }
-        else j++;
-    }
-    return semRep;
-
-    function needsBin(sem){
-        if(sem=="num" || sem=="func" || sem=="sym" || sem=="paren" || sem=="var") return true;
-        else return false;
-    }
-}
-
-//check if the variable is an array
-//was going to be used for parse semantic to tell if i needed to recurse
-//back when i was going to do vars mixed with strings
-//keep it around for now
-function isArray(val){return(val instanceof Array);}
-
-function semComb(semRep,j,combVars){
-    var list = [];
-    var instruct = matchWord(semRep[j][0],1);
-    for(var k=0,len=instruct[0][3].length;k<len;k++){
-        if(semRep[j+instruct[0][3][k]]!= undefined){
-            console.log("adding the "+semRep[j+instruct[0][3][k]][1]+" "+semRep[j+instruct[0][3][k]][0]+" to the list");
-            if(instruct[0][5][k] == 1)
-                switch(semRep[j+instruct[0][3][k]][1]){
-                    case "paren":
-                        //remove the parens
-                        list[k] = semRep[j+instruct[0][3][k]][0].substring(1,semRep[j+instruct[0][3][k]][0].length-1);
-                        break;
-                    case "var":
-                        //cut of the d for derivatives
-                        list[k] = semRep[j+instruct[0][3][k]][0].substring(1);
-                        break;
-
-                    default:
-                        list[k] = semRep[j+instruct[0][3][k]][0];
-                        break;
-                }
-            else list[k] = semRep[j+instruct[0][3][k]][0];
-        }
-        else{
-            console.error("could not find an element at index "+j+instruct[0][3][k]+" relative to "+semRep[j][0]+" at index "+j);
-            errors.push("Could not find an element at index "+j+instruct[0][3][k]+" relative to "+semRep[j][0]+"."); // at index "+j);
-            break;
-        }
-    }
-    //add the pre combination variables to the end of the list
-    list = list.concat(combVars);
-    //build the new semantic representation
-    console.log("pattern: "+instruct[0][1]);
-    semRep[j] = [parsePattern(instruct[0][1],list),instruct[0][2],"combined "+instruct[0][2]];
-    for(var k=0,len=instruct[0][3].length;k<len;k++){
-        console.log("removing "+semRep[j+instruct[0][3][k]][1]+" "+semRep[j+instruct[0][3][k]][1]+" at index "+j+instruct[0][3][k]);        
-        semRep.splice(j+instruct[0][3][k],1);
-        if(instruct[0][3][k]<0)j+=instruct[0][3][k];
-    }
-    return([semRep,j]);
-}
-
 //might want to make the following tables into objects in the future 
 //to make it easier to read and build new ones
 //would make it easier to expand functionality as well
@@ -1699,4 +1387,281 @@ function matchWord(curWord, table){
         errors.push("Unknown function: '"+curWord+"'.");
         return([[curWord,curWord,"-1","err"]]);
     }
+}
+
+//refrence sheet:
+//the construction of a semantic object is as follows
+//0 - the object's value
+//1 - the object's semantic class, governs how this function deals with it
+//2 - any notes about that particular 
+function parseSemantic(semRep){
+    console.log("Parse Semantic");
+
+    //loop is only for display purposes
+    for(var j=0,len=semRep.length,cout="semRep: ";j<len;j++)cout += semRep[j][0]+" ";
+    console.log(cout);
+
+    //set these three vars before each new step
+    var parseLeft = 0;
+    var parseRight = 1;
+    var j=0; //the iterator
+
+    //the first level parse
+    //combines elements and creates functions where special chars are used
+    console.log("The combining loop: combinations of elements and functions");
+    console.log("list length: "+semRep.length);
+    while(j<semRep.length){
+
+        if(semRep[j-1]!=undefined)parseLeft = 1;
+        else parseLeft = 0;
+        if(semRep[j+1]==undefined)parseRight = 0;
+
+
+        console.log("   CL at element "+j+" parse left:"+parseLeft+" parse right:"+parseRight);
+        console.log("current element: "+semRep[j]);
+
+
+        switch(semRep[j][1]){
+            case "num"://numbers
+                console.log("       found a number");
+                //left
+                if(parseLeft!=0){
+                    console.log("        checking to the left");
+                    console.log("        nothing to do left");
+                }
+                if(parseRight!=0){
+                    console.log("        checking to the right");
+                    if(semRep[j+1][1]=="sup"){
+                        //combine number and power
+                        console.log("               combining the number:"+semRep[j][0]+" with power:"+semRep[j+1][0]);
+                        semRep[j] = [(semRep[j][0] + semRep[j+1][0]),"num","number and power"];
+                        semRep.splice(j+1,1);
+                        break;
+                    }
+                    else console.log("        found nothing right");
+                }
+                j++;
+                break;
+
+            case "var"://variables
+                console.log("       found a variable");
+                //left
+                if(parseLeft!=0){
+                    console.log("        checking to the left");
+                    console.log("        nothing to do left");
+                }
+                if(parseRight!=0){
+                    console.log("        checking to the right");
+                    if(semRep[j+1][1]=="sup"){
+                        //the subscript gets combined first
+                        if(semRep[j+2] != undefined){
+                            if(semRep[j+2][1]=="sub"){
+                                console.log("               combining the variable:"+semRep[j][0]+" with subscript:"+semRep[j+1][0]);
+                                semRep[j] = [(semRep[j][0] + semRep[j+1][0]),"var","variable and subscript"];
+                                semRep.splice(j+2,1);
+                                break;
+                            }
+                        }
+                        //combine var and power
+                        console.log("               combining the variable:"+semRep[j][0]+" with power:"+semRep[j+1][0]);
+                        semRep[j] = [(semRep[j][0] + semRep[j+1][0]),"var","variable and power"];
+                        semRep.splice(j+1,1);
+                        break;
+                    }
+                    else if(semRep[j+1][1]=="sub"){
+                        //combine var and subscript
+                        console.log("               combining the variable:"+semRep[j][0]+" with power:"+semRep[j+1][0]);
+                        semRep[j] = [(semRep[j][0] + semRep[j+1][0]),"var","variable and power"];
+                        semRep.splice(j+1,1);
+                        break;
+                    }
+                    else if(semRep[j+1][1]=="paren"){
+                        //combine var and paren to make function
+
+                        //lookup for variable function status goes here
+
+                        console.log("               combining the variable:"+semRep[j][0]+" with paren:"+semRep[j+1][0]);
+                        semRep[j] = [(semRep[j][0] + semRep[j+1][0]),"var","function"];
+                        semRep.splice(j+1,1);
+                        break;
+                    }
+                    else console.log("        found nothing right");
+                }
+                j++;
+                break;
+
+            case "binOp"://binary operators
+                console.log("       found a binary operator");
+                //left
+                if(semRep[j][0]=="-"){
+                    console.log("        binOp is minus. skipping check left");
+                }
+                else{
+                    if(parseLeft!=0){
+                        console.log("        checking to the left");
+                        if(!needsBin(semRep[j-1][1]))console.error("     invalid left hand argument for binOp:"+semRep[j][0]);
+                    }
+                    else{
+                        console.error("       binOp with nothing on the left");
+                        errors.push("'" + semRep[j][0] + "' needs a left argument.");
+                    }
+                }
+                if(semRep[j][0]=="-" || semRep[j][0]=="+"){
+                    console.log("skip check right for + and -");
+                }
+                else{
+                    if(parseRight!=0){
+                        console.log("        checking to the right");
+                        if(!needsBin(semRep[j+1][1])){
+                            if(semRep[j+1][0]!="-"){
+                                console.error("       binOp with invalid arguments on the right");
+                                errors.push("'" + semRep[j][0] + "' has an invalid right arguments.");
+                            }
+                        }
+                    }
+                    else{
+                        errors.push("'" + semRep[j][0] + "' needs a right argument.");
+                        console.error("'" + semRep[j][0] + "' needs a right argument.");
+                    }
+                }
+                j++;
+                break;
+
+            case "comb"://combine
+                var comb = semComb(semRep,j,recurse);
+                semRep = comb[0];
+                j = comb[1];
+                break;
+
+            case "prime":
+                if(parseRight!=0){
+                    console.log("        checking for additional primes");
+                    var recurse = 1;
+                    while(semRep[j+1] != undefined && semRep[j+1][1] == "prime"){
+                        recurse++;
+                        semRep.splice(j+1,1);
+                    }
+                    var comb = semComb(semRep,j,recurse);
+                    semRep = comb[0];
+                    j = comb[1];
+                    break;
+                }
+                else{
+                    console.error("prime must be followed by the variable you are differentiating with respect to in parentheses");
+                    errors.push("The prime must be followed by the variable you are differentiating with respect to in parentheses.");
+                    j++;
+                    break;
+                }
+
+            case "":
+                semRep.splice(j,1);
+                break;
+
+            default: 
+                j++;
+                break;
+        }
+    }
+
+    //the last level
+    //inserts times signs
+    parseLeft = 0;
+    parseRight = 1;
+    j=0;
+    console.log("The last loop: inserting multipliers");
+    console.log("list length: "+semRep.length);
+    while(j<semRep.length){
+        console.log("current element: "+semRep[j]);
+        if(semRep[j-1]!=undefined)parseLeft = 1;
+        else parseLeft = 0;
+
+        console.log('checking ro the right: '+semRep[j+1]);
+        if(semRep[j+1]==undefined)parseRight = 0;
+        console.log("   LL at element "+j+" parse left:"+parseLeft+" parse right:"+parseRight);
+        //Number stuff
+        if(needsBin(semRep[j][1])){
+            console.log("    found a "+semRep[j][1]);
+            //left
+            if(parseLeft!=0){
+                console.log("        checking to the left");
+                if(needsBin(semRep[j-1][1])){
+                    console.log("            inserting a * between "+semRep[j-1][0]+" and "+semRep[j][0]);
+                    semRep.splice(j,0,["*","binOp","inserted multiplier"]);
+                    continue;
+                }
+            }
+            if(parseRight!=0){
+                console.log("        checking to the right");
+                if(needsBin(semRep[j+1][1])){
+                    console.log("           inserting a * between "+semRep[j][0]+" and "+semRep[j+1][0]);
+                    semRep.splice(j+1,0,["*","binOp","inserted multiplier"]);
+                    continue;
+                }
+                else if(semRep[j+1][1]=="binOp"){
+                    j++;
+                    continue;
+                }
+            }
+            j++;
+        }
+        if(parseLeft==0 && parseRight==0){
+            console.log("can't parse left or right");
+            break;
+        }
+        else j++;
+    }
+    return semRep;
+
+    function needsBin(sem){
+        if(sem=="num" || sem=="func" || sem=="sym" || sem=="paren" || sem=="var") return true;
+        else return false;
+    }
+}
+
+//check if the variable is an array
+//was going to be used for parse semantic to tell if i needed to recurse
+//back when i was going to do vars mixed with strings
+//keep it around for now
+function isArray(val){return(val instanceof Array);}
+
+function semComb(semRep,j,combVars){
+    var list = [];
+    var instruct = matchWord(semRep[j][0],1);
+    for(var k=0,len=instruct[0][3].length;k<len;k++){
+        if(semRep[j+instruct[0][3][k]]!= undefined){
+            console.log("adding the "+semRep[j+instruct[0][3][k]][1]+" "+semRep[j+instruct[0][3][k]][0]+" to the list");
+            if(instruct[0][5][k] == 1)
+                switch(semRep[j+instruct[0][3][k]][1]){
+                    case "paren":
+                        //remove the parens
+                        list[k] = semRep[j+instruct[0][3][k]][0].substring(1,semRep[j+instruct[0][3][k]][0].length-1);
+                        break;
+                    case "var":
+                        //cut of the d for derivatives
+                        list[k] = semRep[j+instruct[0][3][k]][0].substring(1);
+                        break;
+
+                    default:
+                        list[k] = semRep[j+instruct[0][3][k]][0];
+                        break;
+                }
+            else list[k] = semRep[j+instruct[0][3][k]][0];
+        }
+        else{
+            console.error("could not find an element at index "+j+instruct[0][3][k]+" relative to "+semRep[j][0]+" at index "+j);
+            errors.push("Could not find an element at index "+j+instruct[0][3][k]+" relative to "+semRep[j][0]+"."); // at index "+j);
+            break;
+        }
+    }
+    //add the pre combination variables to the end of the list
+    list = list.concat(combVars);
+    //build the new semantic representation
+    console.log("pattern: "+instruct[0][1]);
+    semRep[j] = [parsePattern(instruct[0][1],list),instruct[0][2],"combined "+instruct[0][2]];
+    for(var k=0,len=instruct[0][3].length;k<len;k++){
+        console.log("removing "+semRep[j+instruct[0][3][k]][1]+" "+semRep[j+instruct[0][3][k]][1]+" at index "+j+instruct[0][3][k]);        
+        semRep.splice(j+instruct[0][3][k],1);
+        if(instruct[0][3][k]<0)j+=instruct[0][3][k];
+    }
+    return([semRep,j]);
 }
