@@ -1,11 +1,9 @@
 
-function getLatex (container){            
+function updateBox (container){            
     var latex = $(container + ' .mathquill-editable').mathquill('latex');
-    console.log(latex)
     //make sure we need to parse
     if($(container + ' .boxLatex').html() != latex){
 
-        console.log('new shit')
         $(container + ' .boxLatex').html(latex);
         
         latex = parseLatex(latex);
@@ -62,12 +60,20 @@ function makeTester(latex){
 
     jQuery(name + ' .mathquill-editable').mathquill('editable');
 
-    window.setInterval(getLatex(name),100);  
+     
     //$(name + ' .mathquill-editable').keypress(function(){
     //    getLatex(name)
     //});
 }
 
+function updateBoxes(){
+    boxes = $('.myBox');
+    boxes.each(function(){
+        updateBox('#'+ $(this).attr('id'));
+    }); 
+}
+
 $(document).ready(function(){
     makeTester('x \\cdot x');
+    window.setInterval(updateBoxes,100); 
 });
